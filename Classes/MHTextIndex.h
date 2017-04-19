@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <Objective-LevelDB/LevelDB.h>
+#import "LevelDB.h"
 #import "MHIndexedObject.h"
 
 @class MHSearchResultItem;
