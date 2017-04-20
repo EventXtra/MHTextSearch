@@ -164,7 +164,7 @@ void removeIndexForStringInObject(NSData *ident, NSUInteger stringIdx, LDBWriteb
                                    }];
 }
 void indexWordInObjectTextFragment(NSData *ident, NSStringEncoding encoding, bloom_filter_s *bloomFilter,
-                                   NSUInteger minimalTokenLength, BOOL skipStopWords,
+                                   NSUInteger minimalTokenLength, BOOL skipStopWords, BOOL indexAllSubstrings,
                                    NSString *wordSubstring, NSRange wordSubstringRange, NSUInteger stringIdx,
                                    LDBWritebatch *wb) {
     
@@ -265,6 +265,9 @@ void indexWordInObjectTextFragment(NSData *ident, NSStringEncoding encoding, blo
         
         // ... and append the key bytes, without the leading type 0
         [keys appendBytes:key length:(NSUInteger)keyLength];
+
+        // run only the first loop that indexes the whole word if not indexing all substrings
+        if (!indexAllSubstrings) break;
     }
     
     // Finally, for each indexed word, we need to insert a reversed index entry for bookkeeping
@@ -314,6 +317,7 @@ void indexWordInObjectTextFragment(NSData *ident, NSStringEncoding encoding, blo
         _indexingQueue.maxConcurrentOperationCount = 10;
         
         _minimalTokenLength = 2;
+        _indexAllSubstrings = YES;
         _skipStopWords = YES;
         _discardDuplicateTokens = NO;
         
@@ -443,7 +447,8 @@ void indexWordInObjectTextFragment(NSData *ident, NSStringEncoding encoding, blo
                                  usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
                                      indexWordInObjectTextFragment(ident, encoding, bloomFilter,
                                                                    _sself->_minimalTokenLength, _sself->_skipStopWords,
-                                                                   substring, substringRange, idx, wb);
+                                                                   _sself->_indexAllSubstrings, substring,
+                                                                   substringRange, idx, wb);
                                  }];
             
             if (_sself->_discardDuplicateTokens)
@@ -519,7 +524,8 @@ void indexWordInObjectTextFragment(NSData *ident, NSStringEncoding encoding, blo
                                  usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
                                      indexWordInObjectTextFragment(ident, encoding, bloomFilter,
                                                                    _sself->_minimalTokenLength, _sself->_skipStopWords,
-                                                                   substring, substringRange, idx, wb);
+                                                                   _sself->_indexAllSubstrings, substring,
+                                                                   substringRange, idx, wb);
                                  }];
             
             if (_sself->_discardDuplicateTokens)
