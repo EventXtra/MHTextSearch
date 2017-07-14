@@ -441,15 +441,25 @@ void indexWordInObjectTextFragment(NSData *ident, NSStringEncoding encoding, blo
                 
                 bloomFilter = bloom_filter_new(table_size, jenkins_nocase_hash, num_funcs);
             }
-            
-            [obj enumerateSubstringsInRange:(NSRange){0, obj.length}
-                                    options:NSStringEnumerationByWords|NSStringEnumerationLocalized
-                                 usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
-                                     indexWordInObjectTextFragment(ident, encoding, bloomFilter,
-                                                                   _sself->_minimalTokenLength, _sself->_skipStopWords,
-                                                                   _sself->_indexAllSubstrings, substring,
-                                                                   substringRange, idx, wb);
-                                 }];
+
+            if (self.customTokenizer != nil) {
+                self.customTokenizer(obj, ^(NSRange tokenRange) {
+                  NSString *tokenString = [obj substringWithRange:tokenRange];
+                  indexWordInObjectTextFragment(ident, encoding, bloomFilter,
+                                                _sself->_minimalTokenLength, _sself->_skipStopWords,
+                                                _sself->_indexAllSubstrings, tokenString,
+                                                tokenRange, idx, wb);
+                });
+            } else {
+                [obj enumerateSubstringsInRange:(NSRange){0, obj.length}
+                                        options:NSStringEnumerationByWords|NSStringEnumerationLocalized
+                                     usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+                                         indexWordInObjectTextFragment(ident, encoding, bloomFilter,
+                                                                       _sself->_minimalTokenLength, _sself->_skipStopWords,
+                                                                       _sself->_indexAllSubstrings, substring,
+                                                                       substringRange, idx, wb);
+                                     }];
+            }
             
             if (_sself->_discardDuplicateTokens)
                 bloom_filter_free(bloomFilter);

@@ -39,9 +39,12 @@ typedef struct {
 
 @property (strong, readonly) NSOperationQueue * indexingQueue;
 
+typedef void (^ MHTextIndexYieldTokenBlock)(NSRange);
+
 @property (strong, nonatomic) MHIndexedObject *(^indexer)(id object, NSData *identifier);
 @property (strong, nonatomic) NSData *(^identifier)(id object);
 @property (strong, nonatomic) id (^objectGetter)(NSData *identifier);
+@property (strong, nonatomic) void (^customTokenizer)(NSString *string, MHTextIndexYieldTokenBlock yieldToken);
 
 + (instancetype) textIndexWithName:(NSString *)name path:(NSString *)path options:(LevelDBOptions)options;
 + (instancetype) textIndexInLibraryWithName:(NSString *)name;
